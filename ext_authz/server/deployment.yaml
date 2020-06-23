@@ -30,9 +30,11 @@ spec:
     metadata:
       labels:
         app: ext-authz-server
+      annotations:
+        sidecar.istio.io/componentLogLevel: "rbac:debug,jwt:debug,filter:debug"
     spec:
       containers:
-      - image: gcr.io/ymzhu-istio/ext-authz-server:0.1
+      - image: gcr.io/ymzhu-istio/ext-authz-server:0.2
         imagePullPolicy: IfNotPresent
         name: ext-authz-server
         ports:

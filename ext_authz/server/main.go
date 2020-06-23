@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	"github.com/gogo/googleapis/google/rpc"
 	"golang.org/x/net/context"
@@ -37,7 +38,22 @@ func (s *ExtAuthzServer) Check(ctx context.Context, request *auth.CheckRequest) 
 	log.Printf("gRPC check attributes: %s\n", request.Attributes)
 
 	if check(request.GetAttributes().GetRequest().GetHttp().GetHeaders()["Authorization"]) {
+
 		return &auth.CheckResponse{
+			// This actually sets the cookie for the upstream request.
+			// It seems gRPC ext_authz doesn't support setting header for downstream response?
+			HttpResponse: &auth.CheckResponse_OkResponse{
+				OkResponse: &auth.OkHttpResponse{
+					Headers: []*core.HeaderValueOption{
+						{
+							Header: &core.HeaderValue{
+								Key: "Set-Cookie",
+								Value: "xt-AuthZ-Custom-Cookie=abcd5678",
+							},
+						},
+					},
+				},
+			},
 			Status: &status.Status{
 				Code: int32(rpc.OK),
 			},
@@ -56,6 +72,8 @@ func (s ExtAuthzServer) ServeHTTP(response http.ResponseWriter, request *http.Re
 	log.Printf("%s check %s%s, headers: %s\n", request.Proto, request.Host, request.URL, request.Header)
 
 	if check(request.Header.Get("Authorization")) {
+		// This should set the HTTP header for downstream response.
+		response.Header().Set("Set-Cookie", "Ext-AuthZ-Custom-Cookie=abcd1234")
 		response.WriteHeader(http.StatusOK)
 	} else {
 		response.WriteHeader(http.StatusForbidden)
