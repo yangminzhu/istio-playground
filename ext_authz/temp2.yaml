@@ -1,0 +1,38 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: ext-authz-patch2
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app: istio-egressgateway
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: ANY
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: istio_authn #envoy.filters.http.ext_authz
+    patch:
+      operation: MERGE
+      value:
+        name: istio_authn #envoy.filters.http.ext_authz
+        typed_config:
+          '@type': type.googleapis.com/istio.envoy.config.filter.http.authn.v2alpha1.FilterConfig #type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+          skip_validate_trust_domain: false
+          policy:
+            peers:
+            - mtls: {}
+            - mtls: {}
+            principal_binding: USE_PEER
+          #clear_route_cache: true
+          #status_on_errorx:
+          #  code: ServiceUnavailable
+          #with_request_body:
+          #  allow_partial_message: true
+          #  max_request_bytes: 8192
+---

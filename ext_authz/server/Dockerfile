@@ -1,4 +1,4 @@
-FROM golang:1.13 as build
+FROM golang:1.14 as build
 
 WORKDIR /ext_authz_server
 COPY . .

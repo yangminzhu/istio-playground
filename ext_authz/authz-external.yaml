@@ -1,0 +1,25 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: httpbin
+  namespace: foo
+spec:
+  selector:
+    matchLabels:
+      app: httpbin
+      version: v1
+  action: CUSTOM
+  provider:
+    name: "ext-authz-http"
+  rules:
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/headers"]
+    - to:
+        - operation:
+            methods: ["POST"]
+    - to:
+        - operation:
+            paths: ["/status/*"]
+---

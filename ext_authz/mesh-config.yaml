@@ -1,0 +1,11 @@
+    extensionProviders:
+    - name: "ext-authz-http"
+      envoyExtAuthzHttp:
+       service: "ext-authz-http.local"
+       port: 8000
+       pathPrefix: "/check"
+       includeHeadersInCheck: ["x-ext-authz"]
+    - name: "ext-authz-grpc"
+      envoyExtAuthzGrpc:
+       service: "ext-authz-grpc.local"
+       port: 9000

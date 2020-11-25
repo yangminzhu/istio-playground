@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: ext-authz-agent
+  namespace: default
+spec:
+  hosts:
+    - "ext-authz-localhost"
+  addresses:
+    - "127.0.0.1"
+  ports:
+    - name: http
+      number: 80
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: STATIC
+  workloadSelector:
+      labels:
+          app: httpbin
+

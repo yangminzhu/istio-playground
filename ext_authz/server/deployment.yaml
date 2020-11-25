@@ -34,10 +34,62 @@ spec:
         sidecar.istio.io/componentLogLevel: "rbac:debug,jwt:debug,filter:debug"
     spec:
       containers:
-      - image: gcr.io/ymzhu-istio/ext-authz-server:0.2
+      - image: gcr.io/ymzhu-istio/ext-authz-server:0.5
         imagePullPolicy: IfNotPresent
         name: ext-authz-server
         ports:
         - containerPort: 8000
         - containerPort: 9000
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ext-authz-server-v2
+  namespace: foo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ext-authz-server
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: ext-authz-server
+        version: v2
+      annotations:
+        sidecar.istio.io/componentLogLevel: "rbac:debug,jwt:debug,filter:debug"
+    spec:
+      containers:
+      - image: gcr.io/ymzhu-istio/ext-authz-server:0.5
+        imagePullPolicy: IfNotPresent
+        name: ext-authz-server
+        ports:
+        - containerPort: 8000
+        - containerPort: 9000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: ext-authz-server-v2
+  namespace: foo
+spec:
+  host: ext-authz-server.foo.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+  - name: v2
+    labels:
+      version: v2
+---
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+  namespace: "foo"
+spec:
+  mtls:
+    mode: STRICT
+---
+
